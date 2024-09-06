@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 
 namespace CleanArchitecture.Application.Features.Categories
 {
-{
     public class CategoryService(ICategoryRepository categoryRepository, IUnitOfWork unitOfWork, IMapper mapper)
         : ICategoryService
     {
@@ -119,5 +118,4 @@ namespace CleanArchitecture.Application.Features.Categories
             return ServiceResult.Success(HttpStatusCode.NoContent);
         }
     }
-}
 }
