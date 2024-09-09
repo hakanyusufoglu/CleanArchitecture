@@ -15,6 +15,10 @@ namespace CleanArchitecture.Api.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCategoryById(int id) => CreateActionResult(await categoryService.GetByIdAsync(id));
 
+        [HttpGet("products")]
+        public async Task<IActionResult> GetCategoryWithProducts() =>
+                CreateActionResult(await categoryService.GetCategoryWithProductsAsync());
+
         [HttpGet("{id}/products")]
         public async Task<IActionResult> GetCategoryWithProducts(int id) => CreateActionResult(await categoryService.GetCategoryWithProductsAsync(id));
 
