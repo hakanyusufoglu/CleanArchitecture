@@ -27,7 +27,7 @@ namespace CleanArchitecture.Application
         }
         public static ServiceResult<T> SuccessAsCreated(T data, string urlAsCreated)
         {
-            return new() { Data = data, UrlAsCreated = urlAsCreated};
+            return new() { Data = data, UrlAsCreated = urlAsCreated, Status = HttpStatusCode.Created };
         }
         public static ServiceResult<T> Fail(List<string> errorMessages, HttpStatusCode status = HttpStatusCode.BadRequest)
         {
