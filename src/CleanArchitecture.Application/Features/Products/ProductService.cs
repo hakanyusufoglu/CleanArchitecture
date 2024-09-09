@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CleanArchitecture.Application.Contracts.Caching;
 using CleanArchitecture.Application.Contracts.Persistence;
 using CleanArchitecture.Application.Features.Products.Create;
 using CleanArchitecture.Application.Features.Products.Dto;
@@ -10,8 +11,9 @@ using System.Net;
 
 namespace CleanArchitecture.Application.Features.Products
 {
-    public class ProductService(IProductRepository productRepository, IUnitOfWork unitOfWork, IValidator<CreateProductRequest> createProductRequestValidator, IMapper mapper) : IProductService
+    public class ProductService(IProductRepository productRepository, IUnitOfWork unitOfWork, IValidator<CreateProductRequest> createProductRequestValidator, IMapper mapper, ICacheService cacheService) : IProductService
     {
+        private const string productListCacheKey = "ProductListCacheKey";
         public async Task<ServiceResult<CreateProductResponse>> CreateAsync(CreateProductRequest request)
         {
             var anyProduct = await productRepository.AnyAsync(x=>x.Name == request.Name);
@@ -42,9 +44,17 @@ namespace CleanArchitecture.Application.Features.Products
 
         public async Task<ServiceResult<List<ProductDto>>> GetAllListAsync()
         {
+            //cache aside design pattern (decarator design pattern and proxy design pattern best codding)
+
+            var productListAsCached = await cacheService.GetAsync<List<ProductDto>>(productListCacheKey);
+
+            if(productListAsCached is not null) return ServiceResult<List<ProductDto>>.Success(productListAsCached);
+
             var products = await productRepository.GetAllAsync();
 
             var productsAsDto = mapper.Map<List<ProductDto>>(products);
+
+            await cacheService.AddAsync(productListCacheKey, productsAsDto, TimeSpan.FromMinutes(5));
 
             return ServiceResult<List<ProductDto>>.Success(productsAsDto);
         }

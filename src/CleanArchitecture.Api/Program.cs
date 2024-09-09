@@ -1,6 +1,8 @@
 using CleanArchitecture.Api.ExceptionHandler;
 using CleanArchitecture.Api.Filters;
+using CleanArchitecture.Application.Contracts.Caching;
 using CleanArchitecture.Application.Extensions;
+using CleanArchitecture.Caching;
 using CleanArchitecture.Persistence.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +25,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddRepositories(builder.Configuration).AddServices(builder.Configuration);
+
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<ICacheService,CacheService>();
 
 var app = builder.Build();
 
