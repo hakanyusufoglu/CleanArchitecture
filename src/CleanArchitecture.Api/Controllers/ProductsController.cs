@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CleanArchitecture.Api.Controllers
 {
-    public class ProductsController(ProductService productService) : CustomBaseController
+    public class ProductsController(IProductService productService) : CustomBaseController
     {
         [HttpGet]
         public async Task<IActionResult> GetAll() => CreateActionResult(await productService.GetAllListAsync());
