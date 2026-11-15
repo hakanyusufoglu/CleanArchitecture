@@ -1,0 +1,46 @@
+name: .NET build and mapping checks
+on:
+  pull_request:
+  push:
+    branches: [master]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore
+        run: dotnet restore src/CleanArchitecture.sln
+      - name: Build
+        run: dotnet build src/CleanArchitecture.sln --no-restore --configuration Release
+      - name: Verify AutoMapper registration and mappings
+        shell: bash
+        run: |
+          dotnet new console --framework net8.0 --output "$RUNNER_TEMP/MappingCheck"
+          dotnet add "$RUNNER_TEMP/MappingCheck/MappingCheck.csproj" reference "$GITHUB_WORKSPACE/src/CleanArchitecture.Application/CleanArchitecture.Application.csproj"
+          cat > "$RUNNER_TEMP/MappingCheck/Program.cs" <<'EOF'
+          using AutoMapper;
+          using CleanArchitecture.Application.Extensions;
+          using CleanArchitecture.Application.Features.Products.Create;
+          using CleanArchitecture.Application.Features.Categories.Create;
+          using CleanArchitecture.Domain.Entities;
+          using Microsoft.Extensions.Configuration;
+          using Microsoft.Extensions.DependencyInjection;
+
+          var services = new ServiceCollection();
+          services.AddLogging();
+          services.AddServices(new ConfigurationBuilder().Build());
+          using var provider = services.BuildServiceProvider();
+          var mapper = provider.GetRequiredService<IMapper>();
+          var product = mapper.Map<Product>(new CreateProductRequest("TeST", 12.5m, 3, 4));
+          if (product.Name != "test" || product.Price != 12.5m || product.Stock != 3 || product.CategoryId != 4)
+              throw new Exception("Product mapping failed");
+          var category = mapper.Map<Category>(new CreateCategoryRequest("TeST"));
+          if (category.Name != "test") throw new Exception("Category mapping failed");
+          Console.WriteLine("AutoMapper registration and mapping checks passed.");
+          EOF
+          dotnet run --project "$RUNNER_TEMP/MappingCheck/MappingCheck.csproj" --configuration Release
